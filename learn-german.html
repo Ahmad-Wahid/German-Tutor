@@ -1,4 +1,4 @@
-v=cat > lena-german-tutor.html << 'EOF'
+cat > lena-german-tutor.html << 'EOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -447,4 +447,47 @@ Respond ONLY with a strict JSON object, no markdown, no text outside it:
   // ---------- settings wiring ----------
   function openDrawer(){ drawer.classList.add("open"); scrim.classList.add("open"); drawer.setAttribute("aria-hidden","false"); }
   function closeDrawer(){ drawer.classList.remove("open"); scrim.classList.remove("open"); drawer.setAttribute("aria-hidden","true"); }
-  $("#settingsBtn").addEventListener("click",open
+  $("#settingsBtn").addEventListener("click",openDrawer);
+  $("#closeDrawer").addEventListener("click",closeDrawer);
+  scrim.addEventListener("click",closeDrawer);
+
+  function renderProvider(){
+    const p=PROVIDERS[provider];
+    document.querySelectorAll("#provSeg button").forEach(b=>b.classList.toggle("on",b.dataset.prov===provider));
+    $("#provDesc").textContent=p.desc; $("#keyLink").innerHTML=p.link;
+  }
+  document.querySelectorAll("#provSeg button").forEach(b=>{
+    b.addEventListener("click",()=>{ provider=b.dataset.prov; store.set("prov",provider); renderProvider(); });
+  });
+  $("#key").addEventListener("input",e=>{ apiKey=e.target.value.trim(); store.set("key",apiKey); });
+  $("#voice").addEventListener("change",e=>{ voiceURI=e.target.value; store.set("voice",voiceURI); });
+  $("#rate").addEventListener("input",e=>{ rate=parseFloat(e.target.value); $("#rateVal").textContent=rate.toFixed(2)+"×"; store.set("rate",String(rate)); });
+  $("#showCorr").addEventListener("change",e=>{ showCorr=e.target.checked; store.set("showCorr",showCorr?"1":"0"); });
+  $("#showHint").addEventListener("change",e=>{ showHint=e.target.checked; store.set("showHint",showHint?"1":"0"); });
+  $("#muteBtn").addEventListener("click",()=>{ muted=!muted; store.set("muted",muted?"1":"0"); reflectMute(); if(muted) speechSynthesis && speechSynthesis.cancel(); });
+  function reflectMute(){ $("#muteBtn").style.opacity=muted?0.45:1; $("#muteBtn").title=muted?"Ton aus":"Ton an"; }
+
+  // ---------- init ----------
+  $("#key").value=apiKey;
+  $("#rate").value=rate; $("#rateVal").textContent=rate.toFixed(2)+"×";
+  $("#showCorr").checked=showCorr; $("#showHint").checked=showHint;
+  renderProvider(); reflectMute();
+  $("#micNote").innerHTML = SR
+    ? "<b>Mikrofon:</b> Falls das Mikrofon nicht startet, öffne die Datei über einen lokalen Server (<code>python3 -m http.server</code> → localhost) statt per Doppelklick — Browser sperren den Mikrofonzugriff auf <code>file://</code>. Am besten funktioniert Chrome."
+    : "<b>Hinweis:</b> Dieser Browser unterstützt keine Spracherkennung. Nutze Chrome/Edge, oder tippe deine Sätze ein.";
+
+  if(window.speechSynthesis){ loadVoices(); speechSynthesis.onvoiceschanged=loadVoices; }
+
+  // greeting
+  setTimeout(()=>{
+    const hi="Hallo! Ich bin Lena, deine Deutsch-Freundin. Wie geht es dir heute?";
+    addBubble("lena",hi); history.push({role:"lena",text:hi});
+    addExtra(null, "Hi! I'm Lena, your German friend. How are you today?");
+    if(apiKey) speak(hi);
+  },400);
+
+})();
+</script>
+</body>
+</html>
+EOF
