@@ -1,0 +1,450 @@
+v=cat > lena-german-tutor.html << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lena — dein Deutsch-Sprachpartner (A2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDE7DA;      /* warm oat background */
+    --paper-2:#F5F1E8;    /* raised surface */
+    --ink:#26201A;        /* warm near-black text */
+    --muted:#8A7F70;      /* captions, labels */
+    --line:#DAD1BF;       /* hairlines */
+    --honey:#E0A32E;      /* primary accent / idle orb */
+    --petrol:#17605E;     /* active / listening / speaking */
+    --petrol-soft:#2C807D;
+    --sage:#5E8C4E;       /* positive corrections */
+    --rust:#B4552F;       /* gentle error */
+    --shadow: 0 1px 2px rgba(38,32,26,.06), 0 8px 30px rgba(38,32,26,.08);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,sans-serif;
+    display:flex; flex-direction:column; min-height:100dvh;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ---------- Top bar ---------- */
+  header{
+    display:flex; align-items:center; gap:14px;
+    padding:14px 18px; border-bottom:1px solid var(--line);
+    background:rgba(245,241,232,.7); backdrop-filter:blur(8px);
+    position:sticky; top:0; z-index:5;
+  }
+  .avatar{
+    width:38px;height:38px;border-radius:50%;flex:none;
+    background:radial-gradient(circle at 32% 30%, #F0C877, var(--honey) 70%);
+    display:grid;place-items:center;color:#4a3410;font-family:"Fraunces";font-weight:600;font-size:18px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  }
+  .who{display:flex;flex-direction:column;line-height:1.15}
+  .who b{font-family:"Fraunces";font-weight:600;font-size:18px}
+  .who small{color:var(--muted);font-size:12px;font-family:"IBM Plex Mono"}
+  .spacer{flex:1}
+  .icon-btn{
+    border:1px solid var(--line);background:var(--paper-2);color:var(--ink);
+    width:40px;height:40px;border-radius:12px;cursor:pointer;display:grid;place-items:center;
+    transition:transform .12s ease, background .12s ease;
+  }
+  .icon-btn:hover{background:#fff}
+  .icon-btn:active{transform:scale(.94)}
+  .icon-btn:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible{outline:2px solid var(--petrol);outline-offset:2px}
+
+  /* ---------- Chat ---------- */
+  main{flex:1;overflow-y:auto;padding:22px 16px 8px;}
+  .thread{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+  .row{display:flex;gap:10px;align-items:flex-end}
+  .row.me{justify-content:flex-end}
+  .bubble{
+    max-width:80%;padding:11px 14px;border-radius:16px;line-height:1.5;
+    font-size:16px;box-shadow:var(--shadow);position:relative;
+  }
+  .lena .bubble{background:var(--paper-2);border:1px solid var(--line);border-bottom-left-radius:5px}
+  .me .bubble{background:var(--petrol);color:#F3F7F2;border-bottom-right-radius:5px}
+  .mini-avatar{width:28px;height:28px;border-radius:50%;flex:none;
+    background:radial-gradient(circle at 32% 30%, #F0C877, var(--honey) 70%);}
+  .extra{max-width:80%;margin:-4px 0 0 38px;display:flex;flex-direction:column;gap:6px}
+  .chip{
+    font-size:13.5px;line-height:1.45;padding:8px 11px;border-radius:11px;
+    display:flex;gap:8px;align-items:flex-start;
+  }
+  .chip .tag{font-family:"IBM Plex Mono";font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+    padding:2px 6px;border-radius:6px;flex:none;margin-top:1px}
+  .chip.correction{background:rgba(94,140,78,.10);color:#3f5f33;border:1px solid rgba(94,140,78,.28)}
+  .chip.correction .tag{background:var(--sage);color:#fff}
+  .chip.hint{background:rgba(224,163,46,.10);color:#7a5312;border:1px solid rgba(224,163,46,.30)}
+  .chip.hint .tag{background:var(--honey);color:#4a3410}
+  .typing{display:inline-flex;gap:4px;padding:4px 2px}
+  .typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:bounce 1.1s infinite}
+  .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+  @keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-5px);opacity:1}}
+
+  /* ---------- Dock (the signature: the mic orb) ---------- */
+  .dock{
+    position:sticky;bottom:0;padding:14px 16px 22px;
+    background:linear-gradient(to top, var(--paper) 60%, rgba(237,231,218,0));
+    display:flex;flex-direction:column;align-items:center;gap:12px;
+  }
+  .status{font-family:"IBM Plex Mono";font-size:12px;color:var(--muted);height:16px;letter-spacing:.02em}
+  .orb-wrap{position:relative;width:96px;height:96px;display:grid;place-items:center}
+  .ring{position:absolute;inset:0;border-radius:50%;border:2px solid var(--petrol);opacity:0}
+  .orb{
+    width:76px;height:76px;border-radius:50%;border:none;cursor:pointer;position:relative;
+    background:radial-gradient(circle at 34% 30%, #F0C877, var(--honey) 72%);
+    box-shadow: var(--shadow), inset 0 0 0 1px rgba(0,0,0,.05);
+    display:grid;place-items:center;color:#4a3410;
+    transition:transform .15s ease, background .3s ease;
+  }
+  .orb:hover{transform:scale(1.04)}
+  .orb:active{transform:scale(.96)}
+  .orb svg{width:30px;height:30px}
+  /* listening */
+  body[data-state="listening"] .orb{background:radial-gradient(circle at 34% 30%, var(--petrol-soft), var(--petrol) 72%);color:#eafcfa}
+  body[data-state="listening"] .ring{animation:ripple 1.8s ease-out infinite}
+  body[data-state="listening"] .ring:nth-child(2){animation-delay:.6s}
+  @keyframes ripple{0%{opacity:.5;transform:scale(.8)}100%{opacity:0;transform:scale(1.35)}}
+  /* thinking */
+  body[data-state="thinking"] .orb{background:radial-gradient(circle at 34% 30%, #F0C877, var(--honey) 72%)}
+  body[data-state="thinking"] .orb::after{
+    content:"";position:absolute;inset:-6px;border-radius:50%;
+    border:2.5px solid transparent;border-top-color:var(--petrol);animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* speaking */
+  body[data-state="speaking"] .orb{background:radial-gradient(circle at 34% 30%, var(--petrol-soft), var(--petrol) 72%);color:#eafcfa;animation:breathe 1.1s ease-in-out infinite}
+  @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+
+  .type-row{display:flex;gap:8px;width:100%;max-width:640px}
+  .type-row input{
+    flex:1;border:1px solid var(--line);background:var(--paper-2);border-radius:12px;
+    padding:11px 14px;font:inherit;font-size:15px;color:var(--ink);
+  }
+  .send{border:none;background:var(--ink);color:var(--paper);border-radius:12px;padding:0 16px;cursor:pointer;font:inherit;font-weight:500}
+  .send:active{transform:scale(.97)}
+
+  /* ---------- Settings drawer ---------- */
+  .scrim{position:fixed;inset:0;background:rgba(38,32,26,.4);opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .drawer{
+    position:fixed;top:0;right:0;height:100dvh;width:min(400px,92vw);background:var(--paper-2);
+    box-shadow:-10px 0 40px rgba(38,32,26,.18);transform:translateX(100%);transition:transform .24s ease;
+    z-index:21;display:flex;flex-direction:column;
+  }
+  .drawer.open{transform:translateX(0)}
+  .drawer h2{font-family:"Fraunces";font-weight:600;margin:0;font-size:20px}
+  .drawer-head{display:flex;align-items:center;padding:18px 20px;border-bottom:1px solid var(--line)}
+  .drawer-body{padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:20px}
+  .field{display:flex;flex-direction:column;gap:7px}
+  .field label{font-size:13px;font-weight:600}
+  .field .desc{font-size:12px;color:var(--muted);line-height:1.45}
+  .field input[type=text],.field input[type=password],.field select{
+    border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;font:inherit;font-size:14px;color:var(--ink)
+  }
+  .seg{display:flex;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:3px}
+  .seg button{flex:1;border:none;background:transparent;padding:8px;border-radius:8px;cursor:pointer;font:inherit;font-size:13px;color:var(--muted);font-weight:500}
+  .seg button.on{background:var(--ink);color:var(--paper)}
+  .row-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .switch{position:relative;width:44px;height:26px;flex:none}
+  .switch input{opacity:0;width:0;height:0}
+  .slider-t{position:absolute;inset:0;background:var(--line);border-radius:20px;cursor:pointer;transition:.2s}
+  .slider-t::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .switch input:checked + .slider-t{background:var(--petrol)}
+  .switch input:checked + .slider-t::before{transform:translateX(18px)}
+  input[type=range]{width:100%;accent-color:var(--petrol)}
+  .rate-val{font-family:"IBM Plex Mono";font-size:12px;color:var(--muted)}
+  .note{font-size:12px;color:var(--muted);line-height:1.5;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+  .note b{color:var(--ink)}
+  a{color:var(--petrol)}
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body data-state="idle">
+
+  <header>
+    <div class="avatar">L</div>
+    <div class="who"><b>Lena</b><small>Deutsch · Niveau A2</small></div>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="muteBtn" title="Ton an/aus" aria-label="Toggle voice">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>
+    </button>
+    <button class="icon-btn" id="settingsBtn" title="Einstellungen" aria-label="Settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </header>
+
+  <main>
+    <div class="thread" id="thread" aria-live="polite"></div>
+  </main>
+
+  <div class="dock">
+    <div class="status" id="status">Tippe auf den Kreis und sprich</div>
+    <div class="orb-wrap">
+      <div class="ring"></div><div class="ring"></div>
+      <button class="orb" id="orb" aria-label="Push to talk">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/></svg>
+      </button>
+    </div>
+    <div class="type-row">
+      <input id="textInput" type="text" placeholder="…oder tippe hier auf Deutsch" autocomplete="off">
+      <button class="send" id="sendBtn">Senden</button>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <h2>Einstellungen</h2><div class="spacer"></div>
+      <button class="icon-btn" id="closeDrawer" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="drawer-body">
+      <div class="field">
+        <label>KI-Anbieter (free tier)</label>
+        <div class="seg" id="provSeg">
+          <button data-prov="groq" class="on">Groq</button>
+          <button data-prov="gemini">Gemini</button>
+        </div>
+        <div class="desc" id="provDesc"></div>
+      </div>
+      <div class="field">
+        <label for="key">API-Schlüssel</label>
+        <input id="key" type="password" placeholder="Paste your free API key">
+        <div class="desc" id="keyLink"></div>
+      </div>
+      <div class="field">
+        <label for="voice">Deutsche Stimme</label>
+        <select id="voice"></select>
+        <div class="desc">Browser-Stimmen. Für natürlichere Stimmen später Piper oder Kokoro.</div>
+      </div>
+      <div class="field">
+        <label for="rate">Sprechtempo <span class="rate-val" id="rateVal">0.9×</span></label>
+        <input id="rate" type="range" min="0.6" max="1.15" step="0.05" value="0.9">
+        <div class="desc">Langsamer ist gut zum Zuhören lernen.</div>
+      </div>
+      <div class="row-toggle">
+        <div><label>Korrekturen zeigen</label><div class="desc">Sanfte Grammatik-Tipps</div></div>
+        <label class="switch"><input type="checkbox" id="showCorr" checked><span class="slider-t"></span></label>
+      </div>
+      <div class="row-toggle">
+        <div><label>Englische Hinweise</label><div class="desc">Übersetzung schwieriger Wörter</div></div>
+        <label class="switch"><input type="checkbox" id="showHint" checked><span class="slider-t"></span></label>
+      </div>
+      <div class="note" id="micNote"></div>
+      <div class="note">
+        <b>🔑 API Key für GitHub Pages:</b>
+        <p>Du kannst deinen API-Key entweder:</p>
+        <ul style="margin:8px 0 0 16px;font-size:12px;color:var(--muted);">
+          <li>Im Einstellungs-Feld oben eingeben (wird im Browser gespeichert), oder</li>
+          <li>Als Environment Variable in GitHub Pages setzen (für fortgeschrittene Nutzer)</li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- tiny persistent store ----------
+  const mem = {};
+  const store = {
+    get(k, d){ try { const v = localStorage.getItem(k); return v===null? d : v; } catch(e){ return (k in mem)? mem[k] : d; } },
+    set(k, v){ try { localStorage.setItem(k, v); } catch(e){ mem[k] = v; } }
+  };
+
+  const PROVIDERS = {
+    groq: {
+      label:"Groq",
+      desc:"Llama 3.3 70B — sehr schnell, ideal für Sprache. 14.400 Anfragen/Tag gratis, keine Kreditkarte.",
+      link:'Kostenlos: <a href="https://console.groq.com" target="_blank" rel="noopener">console.groq.com</a>',
+      model:"llama-3.3-70b-versatile"
+    },
+    gemini: {
+      label:"Gemini",
+      desc:"Gemini 2.5 Flash — höhere Qualität, gute Korrekturen. 1.500 Anfragen/Tag gratis, keine Kreditkarte.",
+      link:'Kostenlos: <a href="https://aistudio.google.com" target="_blank" rel="noopener">aistudio.google.com</a>',
+      model:"gemini-2.5-flash"
+    }
+  };
+
+  const SYS = `You are Lena, a warm, friendly German conversation partner AND a patient German teacher for a student at CEFR level A2.
+Speak in simple, clear German suited to A2: short sentences, common everyday vocabulary, mostly present and perfect tense. Be genuinely warm and curious, like a good friend — react to what the student says and ALWAYS end with one simple follow-up question so the conversation keeps flowing. Keep replies short: 1 to 3 sentences.
+If the student's German has a grammar or vocabulary mistake, correct it gently and briefly. Never be harsh. If they wrote in English, kindly nudge them back to simple German.
+Respond ONLY with a strict JSON object, no markdown, no text outside it:
+{"reply_de": "<your friendly German reply>", "correction": "<one short, kind correction of the student's German written simply, or null if there were no mistakes>", "hint_en": "<a brief English translation or hint for any harder word/phrase in your reply, or null>"}`;
+
+  // ---------- state ----------
+  let provider = store.get("prov","groq");
+  let apiKey   = store.get("key","");
+  let rate     = parseFloat(store.get("rate","0.9"));
+  let voiceURI = store.get("voice","");
+  let muted    = store.get("muted","0")==="1";
+  let showCorr = store.get("showCorr","1")==="1";
+  let showHint = store.get("showHint","1")==="1";
+  let history  = [];      // {role, text}
+  let voices   = [];
+  let recognizing = false;
+
+  // ---------- elements ----------
+  const $ = s => document.querySelector(s);
+  const thread=$("#thread"), statusEl=$("#status"), orb=$("#orb");
+  const drawer=$("#drawer"), scrim=$("#scrim");
+
+  function setState(s){ document.body.dataset.state = s; }
+  function setStatus(t){ statusEl.textContent = t; }
+
+  // ---------- rendering ----------
+  function addBubble(role, text){
+    const row=document.createElement("div");
+    row.className="row "+(role==="me"?"me":"lena");
+    if(role!=="me"){ const a=document.createElement("div"); a.className="mini-avatar"; row.appendChild(a); }
+    const b=document.createElement("div"); b.className="bubble"; b.textContent=text;
+    row.appendChild(b); thread.appendChild(row); scrollDown(); return b;
+  }
+  function addExtra(correction, hint){
+    if((!correction||!showCorr) && (!hint||!showHint)) return;
+    const wrap=document.createElement("div"); wrap.className="extra";
+    if(correction && showCorr){
+      const c=document.createElement("div"); c.className="chip correction";
+      c.innerHTML='<span class="tag">Tipp</span>'; const t=document.createElement("span"); t.textContent=correction; c.appendChild(t);
+      wrap.appendChild(c);
+    }
+    if(hint && showHint){
+      const h=document.createElement("div"); h.className="chip hint";
+      h.innerHTML='<span class="tag">EN</span>'; const t=document.createElement("span"); t.textContent=hint; h.appendChild(t);
+      wrap.appendChild(h);
+    }
+    thread.appendChild(wrap); scrollDown();
+  }
+  function addTyping(){
+    const row=document.createElement("div"); row.className="row lena"; row.id="typing";
+    const a=document.createElement("div"); a.className="mini-avatar"; row.appendChild(a);
+    const b=document.createElement("div"); b.className="bubble";
+    b.innerHTML='<span class="typing"><i></i><i></i><i></i></span>';
+    row.appendChild(b); thread.appendChild(row); scrollDown();
+  }
+  function removeTyping(){ const t=$("#typing"); if(t) t.remove(); }
+  function scrollDown(){ requestAnimationFrame(()=>{ document.querySelector("main").scrollTop = 1e9; }); }
+
+  // ---------- speech synthesis ----------
+  function loadVoices(){
+    voices = (window.speechSynthesis? speechSynthesis.getVoices():[]).filter(v=>/^de/i.test(v.lang));
+    const sel=$("#voice"); sel.innerHTML="";
+    if(!voices.length){ const o=document.createElement("option"); o.textContent="Keine deutsche Stimme gefunden"; sel.appendChild(o); return; }
+    voices.forEach(v=>{ const o=document.createElement("option"); o.value=v.voiceURI; o.textContent=v.name+" ("+v.lang+")"; sel.appendChild(o); });
+    if(voiceURI && voices.some(v=>v.voiceURI===voiceURI)) sel.value=voiceURI; else voiceURI=sel.value;
+  }
+  function speak(text){
+    if(muted || !window.speechSynthesis || !text) return;
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    const v=voices.find(x=>x.voiceURI===voiceURI); if(v) u.voice=v;
+    u.lang="de-DE"; u.rate=rate; u.pitch=1;
+    u.onstart=()=>{ setState("speaking"); setStatus("Lena spricht…"); };
+    u.onend=()=>{ setState("idle"); setStatus("Tippe auf den Kreis und sprich"); };
+    speechSynthesis.speak(u);
+  }
+
+  // ---------- LLM ----------
+  async function callLLM(){
+    const p = PROVIDERS[provider];
+    if(provider==="groq"){
+      const messages=[{role:"system",content:SYS}];
+      history.forEach(m=>messages.push({role:m.role==="me"?"user":"assistant",content:m.text}));
+      const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{
+        method:"POST",
+        headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey},
+        body:JSON.stringify({model:p.model,messages,temperature:0.7,response_format:{type:"json_object"}})
+      });
+      if(!r.ok) throw new Error("Groq "+r.status+": "+(await r.text()).slice(0,180));
+      const d=await r.json();
+      return d.choices[0].message.content;
+    } else {
+      const contents=history.map(m=>({role:m.role==="me"?"user":"model",parts:[{text:m.text}]}));
+      const url="https://generativelanguage.googleapis.com/v1beta/models/"+p.model+":generateContent?key="+encodeURIComponent(apiKey);
+      const r=await fetch(url,{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          system_instruction:{parts:[{text:SYS}]},
+          contents,
+          generationConfig:{temperature:0.7,responseMimeType:"application/json"}
+        })
+      });
+      if(!r.ok) throw new Error("Gemini "+r.status+": "+(await r.text()).slice(0,180));
+      const d=await r.json();
+      return d.candidates[0].content.parts.map(x=>x.text).join("");
+    }
+  }
+  function parseReply(raw){
+    let obj=null;
+    try{ obj=JSON.parse(raw); }
+    catch(e){ const m=raw.match(/\{[\s\S]*\}/); if(m){ try{ obj=JSON.parse(m[0]); }catch(_){} } }
+    if(!obj || !obj.reply_de) return {reply_de:(raw||"").trim()||"…", correction:null, hint_en:null};
+    return obj;
+  }
+
+  async function send(text){
+    text=(text||"").trim(); if(!text) return;
+    if(!apiKey){ openDrawer(); addBubble("lena","Bitte trage zuerst deinen kostenlosen API-Schlüssel in den Einstellungen ein. 🙂"); return; }
+    addBubble("me",text); history.push({role:"me",text});
+    setState("thinking"); setStatus("Lena denkt nach…"); addTyping();
+    try{
+      const raw=await callLLM();
+      const {reply_de,correction,hint_en}=parseReply(raw);
+      removeTyping();
+      addBubble("lena",reply_de); history.push({role:"lena",text:reply_de});
+      addExtra(correction,hint_en);
+      speak(reply_de);
+      if(muted){ setState("idle"); setStatus("Tippe auf den Kreis und sprich"); }
+    }catch(err){
+      removeTyping(); setState("idle"); setStatus("Etwas ist schiefgelaufen");
+      addBubble("lena","Verbindung fehlgeschlagen: "+err.message+"  — Prüfe den API-Schlüssel, oder wechsle in den Einstellungen den Anbieter (Groq ↔ Gemini).");
+    }
+    if(history.length>20) history=history.slice(-20);
+  }
+
+  // ---------- speech recognition ----------
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let rec=null;
+  if(SR){
+    rec=new SR(); rec.lang="de-DE"; rec.interimResults=true; rec.continuous=false; rec.maxAlternatives=1;
+    let finalText="";
+    rec.onstart=()=>{ recognizing=true; finalText=""; setState("listening"); setStatus("Ich höre zu… sprich Deutsch"); };
+    rec.onresult=(e)=>{
+      let interim="";
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const t=e.results[i][0].transcript;
+        if(e.results[i].isFinal) finalText+=t; else interim+=t;
+      }
+      setStatus((finalText+interim).trim() || "Ich höre zu…");
+    };
+    rec.onerror=(e)=>{ setStatus(e.error==="not-allowed"?"Mikrofon blockiert — siehe Einstellungen":"Fehler: "+e.error); setState("idle"); recognizing=false; };
+    rec.onend=()=>{ recognizing=false; if(finalText.trim()){ send(finalText.trim()); } else { setState("idle"); setStatus("Nichts gehört — versuch es nochmal"); } };
+  }
+
+  orb.addEventListener("click",()=>{
+    if(!rec){ $("#textInput").focus(); setStatus("Spracheingabe nicht verfügbar — bitte tippen"); return; }
+    if(recognizing){ rec.stop(); return; }
+    try{ speechSynthesis && speechSynthesis.cancel(); rec.start(); }
+    catch(e){ /* already started */ }
+  });
+
+  // ---------- text input ----------
+  $("#sendBtn").addEventListener("click",()=>{ const el=$("#textInput"); const v=el.value; el.value=""; send(v); });
+  $("#textInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ const v=e.target.value; e.target.value=""; send(v); } });
+
+  // ---------- settings wiring ----------
+  function openDrawer(){ drawer.classList.add("open"); scrim.classList.add("open"); drawer.setAttribute("aria-hidden","false"); }
+  function closeDrawer(){ drawer.classList.remove("open"); scrim.classList.remove("open"); drawer.setAttribute("aria-hidden","true"); }
+  $("#settingsBtn").addEventListener("click",open
